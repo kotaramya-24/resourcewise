@@ -38,6 +38,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="hand.raised.fill" md="volunteer_activism" />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="dashboard" disableAutomaticContentInsets>
+        <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="chart.bar.fill" md="bar_chart" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="school" disableAutomaticContentInsets>
         <NativeTabs.Trigger.Label>My school</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="building.columns.fill" md="school" />

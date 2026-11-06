@@ -31,10 +31,15 @@
       /* Chalkboard green */
       --accent: oklch(0.47 0.08 160);
       --accent-foreground: oklch(0.99 0 0);
+      /* Dashboard bar series, validated for colour-blind separation on light surfaces */
+      --chart-surplus: #2a6fc4;
+      --chart-need: #d2711f;
     }
     @variant dark {
       --accent: oklch(0.7 0.11 160);
       --accent-foreground: oklch(0.16 0 0);
+      --chart-surplus: #4a8ad4;
+      --chart-need: #d3742a;
     }
   }
 }
@@ -47,6 +52,8 @@
   --color-books-learning: #3a6cc0; /* ruled-line blue */
   --color-stem-tech: #7a55c8; /* beaker violet */
   --color-eraser: #d9566f; /* eraser pink */
+  --color-chart-surplus: var(--chart-surplus);
+  --color-chart-need: var(--chart-need);
 }
 /* @newly:tokens:end */
 
