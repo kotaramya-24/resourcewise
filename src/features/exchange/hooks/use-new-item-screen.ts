@@ -69,9 +69,27 @@ export function useNewItemScreen() {
     router.back();
   };
 
+  const clearing = <T,>(setter: (v: T) => void) => (v: T) => {
+    setError(null);
+    setter(v);
+  };
+
   return {
-    schools, schoolID, setSchoolID, category, setCategory, condition, setCondition, unit, setUnit,
-    title, setTitle, description, setDescription, quantity, setQuantity,
+    schools,
+    schoolID,
+    setSchoolID: clearing(setSchoolID),
+    category,
+    setCategory: clearing(setCategory),
+    condition,
+    setCondition,
+    unit,
+    setUnit,
+    title,
+    setTitle: clearing(setTitle),
+    description,
+    setDescription,
+    quantity,
+    setQuantity: clearing(setQuantity),
     photoURI, pickPhoto, clearPhoto: () => setPhotoURI(null), error, save,
   };
 }

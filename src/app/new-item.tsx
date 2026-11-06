@@ -87,7 +87,7 @@ export default function NewItemScreen() {
         multiline
       />
 
-      <FormField label="Quantity" value={f.quantity} onChangeText={f.setQuantity} placeholder="12" keyboardType="number-pad" />
+      <FormField label="Quantity" value={f.quantity} onChangeText={f.setQuantity} placeholder="How many?" keyboardType="number-pad" />
 
       <View className="gap-2">
         <Label>Unit</Label>
