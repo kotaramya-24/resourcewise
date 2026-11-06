@@ -72,7 +72,7 @@ export function formatDate(iso: string): string {
 
 export function pluralUnit(unit: string, quantity: number): string {
   if (quantity === 1) return unit;
-  if (unit.endsWith('s')) return unit;
+  if (unit === 'each' || unit.endsWith('s')) return unit;
   if (unit === 'box') return 'boxes';
   if (unit.endsWith('y')) return `${unit.slice(0, -1)}ies`;
   return `${unit}s`;
