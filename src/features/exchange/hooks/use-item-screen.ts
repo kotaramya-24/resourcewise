@@ -4,6 +4,7 @@ import { Presets } from 'react-native-pulsar';
 
 import { useExchangeStore } from '@/features/exchange/store/exchange-store';
 import { needsFillableBy, remainingQuantity } from '@/features/exchange/utils/match';
+import { availableQuantity } from '@/features/exchange/utils/transfer';
 import { confirmDelete } from '@/lib/confirm';
 
 export function useItemScreen(itemID: string, presetNeedID: string | null) {
@@ -18,7 +19,7 @@ export function useItemScreen(itemID: string, presetNeedID: string | null) {
   const fillable = item ? needsFillableBy(item, needs, activeSchoolID) : [];
   const initialNeed = fillable.find((n) => n.need_id === presetNeedID) ?? fillable[0] ?? null;
   const initialQty = item
-    ? Math.max(1, Math.min(item.quantity, initialNeed ? remainingQuantity(initialNeed, claims) || 1 : 1))
+    ? Math.max(1, Math.min(availableQuantity(item, claims), initialNeed ? remainingQuantity(initialNeed, claims) || 1 : 1))
     : 1;
 
   const [needID, setNeedID] = useState<string | null>(initialNeed ? initialNeed.need_id : null);
@@ -30,7 +31,7 @@ export function useItemScreen(itemID: string, presetNeedID: string | null) {
   const school = schools.find((s) => s.school_id === item?.school_id);
   const activeSchool = schools.find((s) => s.school_id === activeSchoolID);
   const isOwn = item?.school_id === activeSchoolID;
-  const available = item?.quantity ?? 0;
+  const available = item ? availableQuantity(item, claims) : 0;
   const myClaims = claims.filter((c) => c.item_id === itemID && c.to_school_id === activeSchoolID && c.status !== 'declined');
 
   const step = (delta: number) => {

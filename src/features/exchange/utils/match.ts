@@ -8,6 +8,7 @@ import {
   shortSchoolName,
 } from '@/features/exchange/utils/labels';
 import { isClaimable } from '@/features/exchange/utils/review';
+import { availableQuantity } from '@/features/exchange/utils/transfer';
 
 const LEAD_INS = [
   'our classrooms need ',
@@ -51,10 +52,10 @@ function isConfirmed(item: Item): boolean {
   return isClaimable(item);
 }
 
-function kindFor(need: Need, item: Item, remaining: number): NeedMatch['kind'] {
+function kindFor(need: Need, item: Item, available: number, remaining: number): NeedMatch['kind'] {
   if (item.status === 'submitted') return 'awaiting_confirmation';
   if (!meetsCondition(item.condition, need.min_condition)) return 'partial_condition';
-  if (item.quantity < remaining) return 'partial_quantity';
+  if (available < remaining) return 'partial_quantity';
   return 'exact';
 }
 
@@ -66,16 +67,19 @@ export function candidatesFor(need: Need, items: Item[], claims: Claim[]): NeedM
       (it) =>
         it.category === need.category &&
         it.school_id !== need.school_id &&
-        it.quantity > 0 &&
+        availableQuantity(it, claims) > 0 &&
         (it.status === 'submitted' || isConfirmed(it)) &&
         describesSameThing(need, it),
     )
-    .map((it): NeedMatch => ({ kind: kindFor(need, it, remaining), item: it }))
+    .map((it): NeedMatch => {
+      const available = availableQuantity(it, claims);
+      return { kind: kindFor(need, it, available, remaining), item: it, available };
+    })
     .sort(
       (a, b) =>
         KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
         // Among real matches, take the smallest stock that still covers it, then the better condition.
-        (a.kind === 'exact' ? (a.item?.quantity ?? 0) - (b.item?.quantity ?? 0) : (b.item?.quantity ?? 0) - (a.item?.quantity ?? 0)) ||
+        (a.kind === 'exact' ? (a.available ?? 0) - (b.available ?? 0) : (b.available ?? 0) - (a.available ?? 0)) ||
         conditionRank(b.item?.condition ?? '') - conditionRank(a.item?.condition ?? ''),
     );
 }
@@ -108,8 +112,9 @@ function noMatchReason(
 
   const goodEnough = confirmed.filter((c) => c.kind === 'partial_quantity');
   const biggest = goodEnough[0]?.item;
+  const left = goodEnough[0]?.available ?? 0;
   if (biggest) {
-    return `Not enough: ${at(biggest)} has only ${biggest.quantity} ${pluralUnit(biggest.unit, biggest.quantity)} in the right condition, and you need ${remaining}.`;
+    return `Not enough: ${at(biggest)} has only ${left} ${pluralUnit(biggest.unit, left)} in the right condition, and you need ${remaining}.`;
   }
 
   const below = confirmed[0]?.item;

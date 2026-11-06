@@ -21,6 +21,13 @@ const KIND_TEXT = {
   none: '',
 } as const;
 
+const PLEDGE_TEXT = {
+  pending: 'waiting on approval',
+  approved: 'approved · handoff to verify',
+  transferred: 'transferred',
+  declined: 'declined',
+} as const;
+
 export default function NeedScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const s = useNeedScreen(id);
@@ -80,7 +87,7 @@ export default function NeedScreen() {
                 <ListRow
                   key={c.claim_id}
                   title={it ? it.title : c.item_id}
-                  subtitle={`${shortSchoolName(s.schoolName(c.from_school_id))} · ${c.status === 'approved' ? 'approved' : 'waiting on approval'}`}
+                  subtitle={`${shortSchoolName(s.schoolName(c.from_school_id))} · ${PLEDGE_TEXT[c.status]}`}
                   right={<Text className="text-base font-semibold text-foreground tabular-nums">{c.quantity}</Text>}
                 />
               );
@@ -95,7 +102,7 @@ export default function NeedScreen() {
             <Card list>
               <ListRow
                 title={s.match.item.title}
-                subtitle={`${shortSchoolName(s.schoolName(s.match.item.school_id))} · ${s.match.item.quantity} ${pluralUnit(s.match.item.unit, s.match.item.quantity)} · ${conditionLabel(s.match.item.condition)}`}
+                subtitle={`${shortSchoolName(s.schoolName(s.match.item.school_id))} · ${s.match.available ?? 0} ${pluralUnit(s.match.item.unit, s.match.available ?? 0)} · ${conditionLabel(s.match.item.condition)}`}
                 left={<ItemPhoto item={s.match.item} className="size-12 rounded-lg" iconSize={18} />}
                 onPress={() => (s.match?.item ? s.openItem(s.match.item.item_id) : undefined)}
               />
@@ -117,12 +124,12 @@ export default function NeedScreen() {
       {!fulfilled && s.others.length > 0 ? (
         <Section title="Other listings checked">
           <Card list>
-            {s.others.map(({ kind, item }) =>
+            {s.others.map(({ kind, item, available }) =>
               item ? (
                 <ListRow
                   key={item.item_id}
                   title={item.title}
-                  subtitle={`${KIND_TEXT[kind]} · ${shortSchoolName(s.schoolName(item.school_id))} · ${item.quantity} ${pluralUnit(item.unit, item.quantity)} · ${conditionLabel(item.condition)}`}
+                  subtitle={`${KIND_TEXT[kind]} · ${shortSchoolName(s.schoolName(item.school_id))} · ${available ?? 0} ${pluralUnit(item.unit, available ?? 0)} · ${conditionLabel(item.condition)}`}
                   left={<ItemPhoto item={item} className="size-12 rounded-lg" iconSize={18} />}
                   onPress={() => s.openItem(item.item_id)}
                 />

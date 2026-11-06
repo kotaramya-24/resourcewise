@@ -7,12 +7,18 @@ import { ListRow } from '@/components/list-row';
 import { pressHaptic } from '@/components/pressable';
 import { Section } from '@/components/section';
 import { ItemPhoto } from '@/features/exchange/components/item-photo';
+import { HandoffCard } from '@/features/exchange/components/handoff-card';
 import { ItemRow } from '@/features/exchange/components/item-row';
 import { ReviewCard } from '@/features/exchange/components/review-card';
 import { useSchoolScreen } from '@/features/exchange/hooks/use-school-screen';
 import { pluralUnit, shortSchoolName } from '@/features/exchange/utils/labels';
 
-const STATUS_TEXT = { pending: 'Waiting on approval', approved: 'Approved for pickup', declined: 'Declined' } as const;
+const STATUS_TEXT = {
+  pending: 'Waiting on approval',
+  approved: 'Approved · verify the handoff',
+  transferred: 'Transferred',
+  declined: 'Declined',
+} as const;
 
 export default function SchoolScreen() {
   const s = useSchoolScreen();
@@ -114,6 +120,20 @@ export default function SchoolScreen() {
                 </Card>
               );
             })}
+          </View>
+        )}
+      </Section>
+
+      <Section title={`Handoffs to verify (${s.handoffs.length})`}>
+        {s.handoffs.length === 0 ? (
+          <Text className="text-sm text-muted">
+            Once a request is approved, both schools verify the handoff here. Then the item counts as transferred.
+          </Text>
+        ) : (
+          <View className="gap-3">
+            {s.handoffs.map((c) => (
+              <HandoffCard key={c.claim_id} claim={c} />
+            ))}
           </View>
         )}
       </Section>

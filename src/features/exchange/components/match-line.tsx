@@ -22,7 +22,7 @@ export function MatchLine({ match, schoolName, covered }: MatchLineProps) {
   const from = shortSchoolName(schoolName(match.item.school_id));
   return (
     <Text className="text-sm font-medium text-accent" numberOfLines={1}>
-      Match: {match.item.quantity} {pluralUnit(match.item.unit, match.item.quantity)} at {from}
+      Match: {match.available ?? match.item.quantity} {pluralUnit(match.item.unit, match.available ?? match.item.quantity)} at {from}
     </Text>
   );
 }

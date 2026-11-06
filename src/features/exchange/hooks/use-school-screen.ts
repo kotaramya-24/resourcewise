@@ -20,6 +20,9 @@ export function useSchoolScreen() {
   const itemFor = (id: string) => items.find((i) => i.item_id === id);
 
   const incoming = claims.filter((c) => c.from_school_id === activeSchoolID && c.status === 'pending');
+  const handoffs = claims.filter(
+    (c) => c.status === 'approved' && (c.from_school_id === activeSchoolID || c.to_school_id === activeSchoolID),
+  );
   const outgoing = claims.filter((c) => c.to_school_id === activeSchoolID);
   const listings = items.filter((i) => i.school_id === activeSchoolID);
   const submitted = listings.filter((i) => i.status === 'submitted');
@@ -33,7 +36,7 @@ export function useSchoolScreen() {
   const decline = (claimID: string) =>
     confirmDelete({
       title: 'Decline this request?',
-      message: 'The quantity goes back on your listing.',
+      message: 'The held quantity becomes available to other schools again.',
       confirmLabel: 'Decline',
       onConfirm: () => declineClaim(claimID),
     });
@@ -46,5 +49,5 @@ export function useSchoolScreen() {
       onConfirm: resetDemo,
     });
 
-  return { school, staff, schoolName, itemFor, incoming, outgoing, listings, submitted, myNeeds, approve, decline, reset };
+  return { school, staff, schoolName, itemFor, incoming, handoffs, outgoing, listings, submitted, myNeeds, approve, decline, reset };
 }

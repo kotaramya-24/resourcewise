@@ -4,8 +4,10 @@ import { Text, View } from 'react-native';
 import { Pressable } from '@/components/pressable';
 import { CategoryTag } from '@/features/exchange/components/category-tag';
 import { ItemPhoto } from '@/features/exchange/components/item-photo';
+import { useExchangeStore } from '@/features/exchange/store/exchange-store';
 import type { Item } from '@/features/exchange/types/exchange';
 import { conditionLabel, pluralUnit, shortSchoolName } from '@/features/exchange/utils/labels';
+import { availableQuantity } from '@/features/exchange/utils/transfer';
 import { cn } from '@/lib/cn';
 
 interface ItemRowProps {
@@ -14,7 +16,8 @@ interface ItemRowProps {
 }
 
 export function ItemRow({ item, schoolName }: ItemRowProps) {
-  const claimed = item.quantity === 0;
+  const available = useExchangeStore((s) => availableQuantity(item, s.claims));
+  const claimed = available === 0;
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/item/[id]', params: { id: item.item_id } })}
@@ -43,11 +46,11 @@ export function ItemRow({ item, schoolName }: ItemRowProps) {
         </View>
       </View>
       {claimed ? (
-        <Text className="text-sm font-medium text-muted">All claimed</Text>
+        <Text className="text-sm font-medium text-muted">{item.status === 'transferred' ? 'Transferred' : 'All claimed'}</Text>
       ) : (
         <View className="items-end">
-          <Text className="text-2xl font-bold text-foreground tabular-nums">{item.quantity}</Text>
-          <Text className="text-xs text-muted">{pluralUnit(item.unit, item.quantity)}</Text>
+          <Text className="text-2xl font-bold text-foreground tabular-nums">{available}</Text>
+          <Text className="text-xs text-muted">{pluralUnit(item.unit, available)}</Text>
         </View>
       )}
     </Pressable>

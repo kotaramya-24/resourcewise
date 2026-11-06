@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 
 import { useExchangeStore } from '@/features/exchange/store/exchange-store';
 import { categoryLabel, conditionLabel, shortSchoolName } from '@/features/exchange/utils/labels';
+import { availableQuantity } from '@/features/exchange/utils/transfer';
 
 export function useSuppliesScreen() {
   const items = useExchangeStore((s) => s.items);
@@ -10,6 +11,8 @@ export function useSuppliesScreen() {
   const filters = useExchangeStore((s) => s.filters);
   const activeSchoolID = useExchangeStore((s) => s.activeSchoolID);
   const clearFilters = useExchangeStore((s) => s.clearFilters);
+  const claims = useExchangeStore((s) => s.claims);
+  const left = (it: (typeof items)[number]) => availableQuantity(it, claims);
 
   const schoolName = (id: string) => schools.find((x) => x.school_id === id)?.name ?? id;
   const activeSchool = schools.find((x) => x.school_id === activeSchoolID);
@@ -18,9 +21,9 @@ export function useSuppliesScreen() {
     .filter((it) => (filters.schoolID ? it.school_id === filters.schoolID : true))
     .filter((it) => (filters.category ? it.category === filters.category : true))
     .filter((it) => (filters.condition ? it.condition === filters.condition : true))
-    .sort((a, b) => Number(a.quantity === 0) - Number(b.quantity === 0));
+    .sort((a, b) => Number(left(a) === 0) - Number(left(b) === 0));
 
-  const totalUnits = visible.reduce((sum, it) => sum + it.quantity, 0);
+  const totalUnits = visible.reduce((sum, it) => sum + left(it), 0);
   const anyFilter = Boolean(filters.schoolID || filters.category || filters.condition);
 
   const openFilter = (kind: 'school' | 'category' | 'condition') =>

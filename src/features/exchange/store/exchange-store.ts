@@ -2,10 +2,21 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { SEED_ITEMS, SEED_NEEDS, SEED_SCHOOLS } from '@/features/exchange/data/seed';
-import type { Claim, ClaimResult, ConfirmResult, Filters, Item, Need, School } from '@/features/exchange/types/exchange';
+import { SCHOOL_STAFF } from '@/features/exchange/data/staff';
+import type {
+  Claim,
+  ClaimResult,
+  ConfirmResult,
+  Filters,
+  Item,
+  Need,
+  School,
+  VerifyResult,
+} from '@/features/exchange/types/exchange';
 import { coveredQuantity } from '@/features/exchange/utils/match';
 import { pluralUnit } from '@/features/exchange/utils/labels';
 import { confirmProblems, isClaimable } from '@/features/exchange/utils/review';
+import { availableQuantity } from '@/features/exchange/utils/transfer';
 import { zustandStorage } from '@/lib/storage';
 
 interface NewItemInput {
@@ -46,6 +57,7 @@ interface ExchangeState {
   claimItem: (input: ClaimInput) => ClaimResult;
   approveClaim: (claimID: string) => void;
   declineClaim: (claimID: string) => void;
+  verifyHandoff: (claimID: string) => VerifyResult;
   addItem: (input: NewItemInput) => Item;
   confirmItem: (itemID: string, approver: string) => ConfirmResult;
   removeItem: (itemID: string) => void;
@@ -69,6 +81,18 @@ function syncNeedStatus(needs: Need[], claims: Claim[], needID: string | null): 
   });
 }
 
+function restoreHeldStock(state: ExchangeState): ExchangeState {
+  const items = state.items.map((item) => {
+    const held = state.claims
+      .filter((c) => c.item_id === item.item_id && c.status !== 'declined')
+      .reduce((sum, c) => sum + c.quantity, 0);
+    if (held === 0) return item;
+    const status = item.status === 'claimed' ? (item.confirmed_by ? 'confirmed' : 'available') : item.status;
+    return { ...item, quantity: item.quantity + held, status };
+  });
+  return { ...state, items };
+}
+
 export const useExchangeStore = create<ExchangeState>()(
   persist(
     (set, get) => ({
@@ -90,9 +114,10 @@ export const useExchangeStore = create<ExchangeState>()(
         if (item.school_id === activeSchoolID) return { ok: false, error: "This is your own school's listing." };
         if (!Number.isInteger(quantity) || quantity < 1) return { ok: false, error: 'Enter a whole number of 1 or more.' };
         if (item.status === 'submitted') return { ok: false, error: 'This listing is still under review.' };
-        if (!isClaimable(item)) return { ok: false, error: 'All of this item has been claimed.' };
-        if (quantity > item.quantity) {
-          return { ok: false, error: `Only ${item.quantity} ${pluralUnit(item.unit, item.quantity)} available.` };
+        const available = availableQuantity(item, claims);
+        if (!isClaimable(item) || available === 0) return { ok: false, error: 'Nothing is left to claim on this listing.' };
+        if (quantity > available) {
+          return { ok: false, error: `Only ${available} ${pluralUnit(item.unit, available)} available. Lower the amount.` };
         }
         const need = needID ? needs.find((n) => n.need_id === needID && n.school_id === activeSchoolID) : undefined;
 
@@ -106,35 +131,57 @@ export const useExchangeStore = create<ExchangeState>()(
           status: 'pending',
           created_at: new Date().toISOString(),
         };
+        // A claim only holds stock. The listing's quantity drops once both schools verify the handoff.
         const nextClaims = [claim, ...claims];
-        const left = item.quantity - quantity;
-        set({
-          claims: nextClaims,
-          items: items.map((i) =>
-            i.item_id === itemID ? { ...i, quantity: left, status: left === 0 ? 'claimed' : i.status } : i,
-          ),
-          needs: syncNeedStatus(needs, nextClaims, claim.need_id),
-        });
+        set({ claims: nextClaims, needs: syncNeedStatus(needs, nextClaims, claim.need_id) });
         return { ok: true, claim };
       },
 
       approveClaim: (claimID) =>
-        set((s) => ({ claims: s.claims.map((c) => (c.claim_id === claimID ? { ...c, status: 'approved' } : c)) })),
+        set((s) => ({
+          claims: s.claims.map((c) => (c.claim_id === claimID && c.status === 'pending' ? { ...c, status: 'approved' } : c)),
+        })),
 
       declineClaim: (claimID) => {
         const { claims, items, needs } = get();
         const claim = claims.find((c) => c.claim_id === claimID);
         if (!claim || claim.status !== 'pending') return;
         const nextClaims = claims.map((c) => (c.claim_id === claimID ? { ...c, status: 'declined' as const } : c));
+        set({ claims: nextClaims, items, needs: syncNeedStatus(needs, nextClaims, claim.need_id) });
+      },
+
+      verifyHandoff: (claimID) => {
+        const { claims, items, activeSchoolID } = get();
+        const claim = claims.find((c) => c.claim_id === claimID);
+        if (!claim) return { ok: false, error: 'This handoff no longer exists.' };
+        if (claim.status !== 'approved') return { ok: false, error: 'Only approved handoffs can be verified.' };
+        const giving = claim.from_school_id === activeSchoolID;
+        const receiving = claim.to_school_id === activeSchoolID;
+        if (!giving && !receiving) return { ok: false, error: 'Only the two schools in this handoff can verify it.' };
+        const verifier = SCHOOL_STAFF[activeSchoolID]?.approver ?? activeSchoolID;
+        const marked: Claim = {
+          ...claim,
+          from_verified_by: giving ? verifier : claim.from_verified_by,
+          to_verified_by: receiving ? verifier : claim.to_verified_by,
+        };
+        if (!marked.from_verified_by || !marked.to_verified_by) {
+          set({ claims: claims.map((c) => (c.claim_id === claimID ? marked : c)) });
+          return { ok: true, transferred: false };
+        }
+        const item = items.find((i) => i.item_id === claim.item_id);
+        if (!item) return { ok: false, error: 'This listing no longer exists.' };
+        if (claim.quantity > item.quantity) {
+          return { ok: false, error: `Only ${item.quantity} ${pluralUnit(item.unit, item.quantity)} left on the listing.` };
+        }
+        const done: Claim = { ...marked, status: 'transferred', transferred_at: new Date().toISOString() };
+        const left = item.quantity - claim.quantity;
         set({
-          claims: nextClaims,
+          claims: claims.map((c) => (c.claim_id === claimID ? done : c)),
           items: items.map((i) =>
-            i.item_id === claim.item_id
-              ? { ...i, quantity: i.quantity + claim.quantity, status: i.confirmed_by ? 'confirmed' : 'available' }
-              : i,
+            i.item_id === item.item_id ? { ...i, quantity: left, status: left === 0 ? 'transferred' : i.status } : i,
           ),
-          needs: syncNeedStatus(needs, nextClaims, claim.need_id),
         });
+        return { ok: true, transferred: true };
       },
 
       addItem: (input) => {
@@ -173,16 +220,19 @@ export const useExchangeStore = create<ExchangeState>()(
     }),
     {
       name: 'resourcewise-exchange',
-      // v2 reloads the attached seed data unchanged, discarding earlier test claims.
-      version: 2,
-      migrate: () => ({
-        schools: SEED_SCHOOLS,
-        items: SEED_ITEMS,
-        needs: SEED_NEEDS,
-        claims: [],
-        activeSchoolID: 'S01',
-        filters: EMPTY_FILTERS,
-      }),
+      // v2 reloaded the attached seed data. v3 stops subtracting stock at claim time, so it puts held units back.
+      version: 3,
+      migrate: (persisted, version) => {
+        if (version === 2 && persisted) return restoreHeldStock(persisted as ExchangeState);
+        return {
+          schools: SEED_SCHOOLS,
+          items: SEED_ITEMS,
+          needs: SEED_NEEDS,
+          claims: [],
+          activeSchoolID: 'S01',
+          filters: EMPTY_FILTERS,
+        };
+      },
       storage: createJSONStorage(() => zustandStorage),
     },
   ),
