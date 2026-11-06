@@ -1,7 +1,7 @@
 import '@/global.css';
 
 import Constants from 'expo-constants';
-import { DarkTheme, DefaultTheme, Slot, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -83,11 +83,21 @@ export default function RootLayout() {
             {/* ThemeSwitchHost is always mounted (zero cost when unused) so any theme
                 toggle switches via useThemeSwitch() and the circular reveal plays. */}
             <ThemeSwitchHost>
-              {/* The scaffold boots straight into src/app/index.tsx (the Newly welcome
-                  screen), no tab bar. src/components/app-tabs.tsx is the NativeTabs
-                  reference: when the app has tab routes, render <AppTabs /> here
-                  instead of <Slot /> (explore.tsx is its second tab). */}
-              <Slot />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="item/[id]" />
+                <Stack.Screen name="need/[id]" />
+                <Stack.Screen
+                  name="filter"
+                  options={{ presentation: 'formSheet', sheetAllowedDetents: [0.6, 1], sheetGrabberVisible: true }}
+                />
+                <Stack.Screen
+                  name="switch-school"
+                  options={{ presentation: 'formSheet', sheetAllowedDetents: [0.7, 1], sheetGrabberVisible: true }}
+                />
+                <Stack.Screen name="new-item" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="new-need" options={{ presentation: 'modal' }} />
+              </Stack>
             </ThemeSwitchHost>
           </ThemeProvider>
         </HeroUINativeProvider>

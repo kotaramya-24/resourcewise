@@ -28,20 +28,25 @@
 @layer theme {
   :root {
     @variant light {
-      --accent: oklch(0.66 0.26 325);
+      /* Chalkboard green */
+      --accent: oklch(0.47 0.08 160);
       --accent-foreground: oklch(0.99 0 0);
     }
     @variant dark {
-      --accent: oklch(0.72 0.22 325);
+      --accent: oklch(0.7 0.11 160);
       --accent-foreground: oklch(0.16 0 0);
     }
   }
 }
 
-/* Base corner radius — the DENSITY dial's lever. Every rounded-* utility derives
- * from this (HeroUI: --radius-2xl = --radius * 2, etc.). Larger = softer/cozier. */
+/* Category + state colors, drawn from the supplies themselves. Mid-tones that read in
+ * both schemes; use at full strength for dots/text and /15 for tinted chips. */
 @theme {
   --radius: 0.75rem;
+  --color-paper-writing: #d9971c; /* pencil yellow */
+  --color-books-learning: #3a6cc0; /* ruled-line blue */
+  --color-stem-tech: #7a55c8; /* beaker violet */
+  --color-eraser: #d9566f; /* eraser pink */
 }
 /* @newly:tokens:end */
 
