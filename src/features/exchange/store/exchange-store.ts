@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { SEED_ITEMS, SEED_NEEDS, SEED_SCHOOLS } from '@/features/exchange/data/seed';
-import type { Claim, ClaimResult, Filters, Item, Need, School } from '@/features/exchange/types/exchange';
+import type { Claim, ClaimResult, ConfirmResult, Filters, Item, Need, School } from '@/features/exchange/types/exchange';
 import { coveredQuantity } from '@/features/exchange/utils/match';
 import { pluralUnit } from '@/features/exchange/utils/labels';
+import { confirmProblems, isClaimable } from '@/features/exchange/utils/review';
 import { zustandStorage } from '@/lib/storage';
 
 interface NewItemInput {
@@ -46,6 +47,7 @@ interface ExchangeState {
   approveClaim: (claimID: string) => void;
   declineClaim: (claimID: string) => void;
   addItem: (input: NewItemInput) => Item;
+  confirmItem: (itemID: string, approver: string) => ConfirmResult;
   removeItem: (itemID: string) => void;
   addNeed: (input: NewNeedInput) => Need;
   removeNeed: (needID: string) => void;
@@ -88,7 +90,7 @@ export const useExchangeStore = create<ExchangeState>()(
         if (item.school_id === activeSchoolID) return { ok: false, error: "This is your own school's listing." };
         if (!Number.isInteger(quantity) || quantity < 1) return { ok: false, error: 'Enter a whole number of 1 or more.' };
         if (item.status === 'submitted') return { ok: false, error: 'This listing is still under review.' };
-        if (item.status !== 'available' || item.quantity < 1) return { ok: false, error: 'All of this item has been claimed.' };
+        if (!isClaimable(item)) return { ok: false, error: 'All of this item has been claimed.' };
         if (quantity > item.quantity) {
           return { ok: false, error: `Only ${item.quantity} ${pluralUnit(item.unit, item.quantity)} available.` };
         }
@@ -109,7 +111,7 @@ export const useExchangeStore = create<ExchangeState>()(
         set({
           claims: nextClaims,
           items: items.map((i) =>
-            i.item_id === itemID ? { ...i, quantity: left, status: left === 0 ? 'claimed' : 'available' } : i,
+            i.item_id === itemID ? { ...i, quantity: left, status: left === 0 ? 'claimed' : i.status } : i,
           ),
           needs: syncNeedStatus(needs, nextClaims, claim.need_id),
         });
@@ -127,7 +129,9 @@ export const useExchangeStore = create<ExchangeState>()(
         set({
           claims: nextClaims,
           items: items.map((i) =>
-            i.item_id === claim.item_id ? { ...i, quantity: i.quantity + claim.quantity, status: 'available' } : i,
+            i.item_id === claim.item_id
+              ? { ...i, quantity: i.quantity + claim.quantity, status: i.confirmed_by ? 'confirmed' : 'available' }
+              : i,
           ),
           needs: syncNeedStatus(needs, nextClaims, claim.need_id),
         });
@@ -139,6 +143,17 @@ export const useExchangeStore = create<ExchangeState>()(
         const item: Item = { ...input, item_id: id, status: 'submitted' };
         set({ items: [item, ...items] });
         return item;
+      },
+
+      confirmItem: (itemID, approver) => {
+        const { items } = get();
+        const item = items.find((i) => i.item_id === itemID);
+        if (!item) return { ok: false, errors: ['This listing no longer exists.'] };
+        if (item.status !== 'submitted') return { ok: false, errors: ['Only submitted items can be confirmed.'] };
+        const errors = confirmProblems(item);
+        if (errors.length > 0) return { ok: false, errors };
+        set({ items: items.map((i) => (i.item_id === itemID ? { ...i, status: 'confirmed', confirmed_by: approver } : i)) });
+        return { ok: true };
       },
 
       removeItem: (itemID) => set((s) => ({ items: s.items.filter((i) => i.item_id !== itemID) })),

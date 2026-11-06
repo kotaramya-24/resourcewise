@@ -31,7 +31,7 @@ export default function NewItemScreen() {
       </View>
       <View className="gap-1">
         <Text className="text-3xl font-bold text-foreground">Add item</Text>
-        <Text className="text-sm text-muted">New items are submitted for review before other schools can claim them.</Text>
+        <Text className="text-sm text-muted">New items are submitted, then your school's approver confirms them before other schools can claim them.</Text>
       </View>
 
       <View className="gap-2">

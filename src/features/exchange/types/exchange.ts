@@ -2,7 +2,7 @@ export type Category = 'paper_writing' | 'books_learning' | 'stem_tech';
 
 export type Condition = 'new' | 'good' | 'usable' | 'needs_repair';
 
-export type ItemStatus = 'submitted' | 'available' | 'claimed';
+export type ItemStatus = 'submitted' | 'confirmed' | 'available' | 'claimed';
 
 export type NeedStatus = 'open' | 'fulfilled';
 
@@ -27,6 +27,7 @@ export interface Item {
   condition: string;
   photo_file: string;
   status: string;
+  confirmed_by?: string;
 }
 
 export interface Need {
@@ -56,6 +57,8 @@ export interface Filters {
   category: Category | null;
   condition: Condition | null;
 }
+
+export type ConfirmResult = { ok: true } | { ok: false; errors: string[] };
 
 export type ClaimResult = { ok: true; claim: Claim } | { ok: false; error: string };
 

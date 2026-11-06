@@ -10,6 +10,7 @@ import { Pressable, pressHaptic } from '@/components/pressable';
 import { CategoryTag } from '@/features/exchange/components/category-tag';
 import { ClaimStamp } from '@/features/exchange/components/claim-stamp';
 import { ItemPhoto } from '@/features/exchange/components/item-photo';
+import { ReviewCard } from '@/features/exchange/components/review-card';
 import { useItemScreen } from '@/features/exchange/hooks/use-item-screen';
 import { useTokenColor } from '@/features/exchange/hooks/use-token-color';
 import { conditionLabel, formatDate, pluralUnit } from '@/features/exchange/utils/labels';
@@ -71,13 +72,10 @@ export default function ItemScreen() {
         </Card>
       ) : null}
 
-      {item.status === 'submitted' ? (
-        <Card>
-          <View className="gap-1">
-            <Text className="text-base font-semibold text-foreground">Submitted · under review</Text>
-            <Text className="text-sm text-muted">Schools can claim this item once it has been reviewed.</Text>
-          </View>
-        </Card>
+      {item.status === 'submitted' ? <ReviewCard item={item} /> : null}
+
+      {item.confirmed_by ? (
+        <Text className="text-sm text-muted">{`Confirmed by ${item.confirmed_by}`}</Text>
       ) : null}
 
       {!s.isOwn && !soldOut && item.status !== 'submitted' ? (

@@ -37,6 +37,9 @@ export function ItemRow({ item, schoolName }: ItemRowProps) {
           {item.status === 'submitted' ? (
             <Text className="text-xs font-semibold uppercase tracking-wide text-accent">Submitted</Text>
           ) : null}
+          {item.status === 'confirmed' ? (
+            <Text className="text-xs font-semibold uppercase tracking-wide text-muted">Confirmed</Text>
+          ) : null}
         </View>
       </View>
       {claimed ? (

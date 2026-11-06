@@ -22,6 +22,7 @@ export function useSchoolScreen() {
   const incoming = claims.filter((c) => c.from_school_id === activeSchoolID && c.status === 'pending');
   const outgoing = claims.filter((c) => c.to_school_id === activeSchoolID);
   const listings = items.filter((i) => i.school_id === activeSchoolID);
+  const submitted = listings.filter((i) => i.status === 'submitted');
   const myNeeds = needs.filter((n) => n.school_id === activeSchoolID);
 
   const approve = (claimID: string) => {
@@ -45,5 +46,5 @@ export function useSchoolScreen() {
       onConfirm: resetDemo,
     });
 
-  return { school, staff, schoolName, itemFor, incoming, outgoing, listings, myNeeds, approve, decline, reset };
+  return { school, staff, schoolName, itemFor, incoming, outgoing, listings, submitted, myNeeds, approve, decline, reset };
 }

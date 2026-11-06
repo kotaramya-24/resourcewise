@@ -1,5 +1,6 @@
 import type { Claim, Item, Need, NeedMatch } from '@/features/exchange/types/exchange';
 import { meetsCondition } from '@/features/exchange/utils/labels';
+import { isClaimable } from '@/features/exchange/utils/review';
 
 const LEAD_INS = [
   'our classrooms need ',
@@ -46,8 +47,7 @@ export function candidatesFor(need: Need, items: Item[], claims: Claim[]): NeedM
       (it) =>
         it.category === need.category &&
         it.school_id !== need.school_id &&
-        it.status === 'available' &&
-        it.quantity > 0 &&
+        isClaimable(it) &&
         describesSameThing(need, it),
     )
     .map((it): NeedMatch => {

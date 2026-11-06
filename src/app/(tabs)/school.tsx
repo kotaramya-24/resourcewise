@@ -8,6 +8,7 @@ import { pressHaptic } from '@/components/pressable';
 import { Section } from '@/components/section';
 import { ItemPhoto } from '@/features/exchange/components/item-photo';
 import { ItemRow } from '@/features/exchange/components/item-row';
+import { ReviewCard } from '@/features/exchange/components/review-card';
 import { useSchoolScreen } from '@/features/exchange/hooks/use-school-screen';
 import { pluralUnit, shortSchoolName } from '@/features/exchange/utils/labels';
 
@@ -57,6 +58,20 @@ export default function SchoolScreen() {
           </Button>
         </View>
       </View>
+
+      <Section title={`Submissions to confirm (${s.submitted.length})`}>
+        {s.submitted.length === 0 ? (
+          <Text className="text-sm text-muted">
+            New items your school adds wait here until {s.staff?.approver ?? 'your approver'} confirms them.
+          </Text>
+        ) : (
+          <View className="gap-3">
+            {s.submitted.map((it) => (
+              <ReviewCard key={it.item_id} item={it} showItem />
+            ))}
+          </View>
+        )}
+      </Section>
 
       <Section title={`Requests to approve (${s.incoming.length})`}>
         {s.incoming.length === 0 ? (
