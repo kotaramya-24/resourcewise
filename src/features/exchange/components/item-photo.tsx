@@ -6,6 +6,7 @@ import { ITEM_PHOTOS } from '@/features/exchange/data/photos';
 import { useTokenColor } from '@/features/exchange/hooks/use-token-color';
 import type { Item } from '@/features/exchange/types/exchange';
 import { categorySymbol } from '@/features/exchange/utils/labels';
+import { uploadedPhotoURI } from '@/features/exchange/utils/photo-storage';
 import { cn } from '@/lib/cn';
 import { imageFade } from '@/lib/motion';
 
@@ -22,7 +23,8 @@ const CATEGORY_TOKEN: Record<string, string> = {
 };
 
 export function ItemPhoto({ item, className, iconSize = 26 }: ItemPhotoProps) {
-  const source = ITEM_PHOTOS[item.photo_file];
+  const uploaded = ITEM_PHOTOS[item.photo_file] ? null : uploadedPhotoURI(item.photo_file);
+  const source = ITEM_PHOTOS[item.photo_file] ?? (uploaded ? { uri: uploaded } : undefined);
   const color = useTokenColor(CATEGORY_TOKEN[item.category] ?? '--color-paper-writing');
   const symbol = categorySymbol(item.category);
 

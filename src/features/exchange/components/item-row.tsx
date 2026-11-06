@@ -32,7 +32,12 @@ export function ItemRow({ item, schoolName }: ItemRowProps) {
             {conditionLabel(item.condition)}
           </Text>
         </Text>
-        <CategoryTag category={item.category} />
+        <View className="flex-row items-center gap-2">
+          <CategoryTag category={item.category} />
+          {item.status === 'submitted' ? (
+            <Text className="text-xs font-semibold uppercase tracking-wide text-accent">Submitted</Text>
+          ) : null}
+        </View>
       </View>
       {claimed ? (
         <Text className="text-sm font-medium text-muted">All claimed</Text>

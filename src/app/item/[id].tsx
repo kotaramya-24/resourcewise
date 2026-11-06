@@ -71,7 +71,16 @@ export default function ItemScreen() {
         </Card>
       ) : null}
 
-      {!s.isOwn && !soldOut ? (
+      {item.status === 'submitted' ? (
+        <Card>
+          <View className="gap-1">
+            <Text className="text-base font-semibold text-foreground">Submitted · under review</Text>
+            <Text className="text-sm text-muted">Schools can claim this item once it has been reviewed.</Text>
+          </View>
+        </Card>
+      ) : null}
+
+      {!s.isOwn && !soldOut && item.status !== 'submitted' ? (
         <View className="gap-4">
           {s.fillable.length > 0 ? (
             <View className="gap-2">

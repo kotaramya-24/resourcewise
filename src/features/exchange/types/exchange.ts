@@ -2,7 +2,7 @@ export type Category = 'paper_writing' | 'books_learning' | 'stem_tech';
 
 export type Condition = 'new' | 'good' | 'usable' | 'needs_repair';
 
-export type ItemStatus = 'available' | 'claimed';
+export type ItemStatus = 'submitted' | 'available' | 'claimed';
 
 export type NeedStatus = 'open' | 'fulfilled';
 

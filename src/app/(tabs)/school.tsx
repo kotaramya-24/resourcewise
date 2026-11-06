@@ -42,7 +42,7 @@ export default function SchoolScreen() {
               router.push('/new-item');
             }}
           >
-            <Button.Label>List surplus</Button.Label>
+            <Button.Label>Add item</Button.Label>
           </Button>
         </View>
         <View className="flex-1">
@@ -126,7 +126,7 @@ export default function SchoolScreen() {
 
       <Section title={`Your listings (${s.listings.length})`}>
         {s.listings.length === 0 ? (
-          <Text className="text-sm text-muted">Nothing listed yet. Tap List surplus to share supplies.</Text>
+          <Text className="text-sm text-muted">Nothing listed yet. Tap Add item to share supplies.</Text>
         ) : (
           <View>
             {s.listings.map((it) => (

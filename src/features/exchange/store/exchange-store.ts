@@ -8,6 +8,8 @@ import { pluralUnit } from '@/features/exchange/utils/labels';
 import { zustandStorage } from '@/lib/storage';
 
 interface NewItemInput {
+  school_id: string;
+  photo_file: string;
   category: string;
   title: string;
   description: string;
@@ -85,6 +87,7 @@ export const useExchangeStore = create<ExchangeState>()(
         if (!item) return { ok: false, error: 'This listing no longer exists.' };
         if (item.school_id === activeSchoolID) return { ok: false, error: "This is your own school's listing." };
         if (!Number.isInteger(quantity) || quantity < 1) return { ok: false, error: 'Enter a whole number of 1 or more.' };
+        if (item.status === 'submitted') return { ok: false, error: 'This listing is still under review.' };
         if (item.status !== 'available' || item.quantity < 1) return { ok: false, error: 'All of this item has been claimed.' };
         if (quantity > item.quantity) {
           return { ok: false, error: `Only ${item.quantity} ${pluralUnit(item.unit, item.quantity)} available.` };
@@ -131,9 +134,9 @@ export const useExchangeStore = create<ExchangeState>()(
       },
 
       addItem: (input) => {
-        const { items, activeSchoolID } = get();
+        const { items } = get();
         const id = nextID('I', items.map((i) => i.item_id));
-        const item: Item = { ...input, item_id: id, school_id: activeSchoolID, photo_file: '', status: 'available' };
+        const item: Item = { ...input, item_id: id, status: 'submitted' };
         set({ items: [item, ...items] });
         return item;
       },

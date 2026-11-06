@@ -2,7 +2,9 @@ import { router } from 'expo-router';
 import { Button } from 'heroui-native';
 import { FlatList, ScrollView, Text, View } from 'react-native';
 
+import { Icon } from '@/components/icon';
 import { Pressable } from '@/components/pressable';
+import { useTokenColor } from '@/features/exchange/hooks/use-token-color';
 import { FilterPill } from '@/features/exchange/components/filter-pill';
 import { ItemRow } from '@/features/exchange/components/item-row';
 import { TableCounts } from '@/features/exchange/components/table-counts';
@@ -11,6 +13,7 @@ import { shortSchoolName } from '@/features/exchange/utils/labels';
 
 export default function SuppliesScreen() {
   const s = useSuppliesScreen();
+  const onAccent = useTokenColor('--color-accent-foreground');
 
   return (
     <FlatList
@@ -24,6 +27,15 @@ export default function SuppliesScreen() {
         <View className="gap-4 pb-2">
           <View className="flex-row items-end justify-between gap-3">
             <Text className="text-3xl font-bold text-foreground">Supplies</Text>
+            <View className="flex-1" />
+            <Pressable
+              onPress={() => router.push('/new-item')}
+              accessibilityRole="button"
+              accessibilityLabel="Add item"
+              className="size-11 items-center justify-center rounded-full bg-accent"
+            >
+              <Icon sf="plus" ion="add" size={22} color={onAccent} />
+            </Pressable>
             <Pressable
               onPress={() => router.push('/switch-school')}
               className="min-h-11 justify-center rounded-full bg-accent/15 px-4"

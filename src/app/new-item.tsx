@@ -1,18 +1,22 @@
 import { router } from 'expo-router';
-import { Button } from 'heroui-native';
+import { Button, Label } from 'heroui-native';
 import { Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
-import { pressHaptic } from '@/components/pressable';
+import { Icon } from '@/components/icon';
+import { Image } from '@/components/image';
+import { Pressable, pressHaptic } from '@/components/pressable';
 import { Segmented } from '@/components/segmented';
 import { FormField } from '@/features/exchange/components/form-field';
-import { UNITS, useNewItemScreen } from '@/features/exchange/hooks/use-new-item-screen';
-import { useExchangeStore } from '@/features/exchange/store/exchange-store';
-import { CATEGORIES, CONDITIONS, categoryLabel, conditionLabel } from '@/features/exchange/utils/labels';
+import { SelectField } from '@/features/exchange/components/select-field';
+import { FORM_CONDITIONS, UNITS, useNewItemScreen } from '@/features/exchange/hooks/use-new-item-screen';
+import { useTokenColor } from '@/features/exchange/hooks/use-token-color';
+import type { Category } from '@/features/exchange/types/exchange';
+import { CATEGORIES, categoryLabel, conditionLabel } from '@/features/exchange/utils/labels';
 
 export default function NewItemScreen() {
   const f = useNewItemScreen();
-  const school = useExchangeStore((s) => s.schools.find((x) => x.school_id === s.activeSchoolID));
+  const muted = useTokenColor('--color-muted');
 
   return (
     <KeyboardAwareScrollView
@@ -26,18 +30,57 @@ export default function NewItemScreen() {
         </Button>
       </View>
       <View className="gap-1">
-        <Text className="text-3xl font-bold text-foreground">List surplus</Text>
-        <Text className="text-sm text-muted">Shared from {school?.name ?? 'your school'}</Text>
+        <Text className="text-3xl font-bold text-foreground">Add item</Text>
+        <Text className="text-sm text-muted">New items are submitted for review before other schools can claim them.</Text>
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-foreground">Category</Text>
-        <Segmented values={CATEGORIES} value={f.category} onChange={f.setCategory} labels={CATEGORIES.map(categoryLabel)} />
+        <Label>Photo</Label>
+        {f.photoURI ? (
+          <View className="gap-2">
+            <Image source={{ uri: f.photoURI }} className="aspect-square w-full rounded-2xl bg-surface-secondary" contentFit="cover" />
+            <View className="flex-row gap-3">
+              <Button variant="secondary" size="sm" onPress={f.pickPhoto}>
+                <Button.Label>Choose another</Button.Label>
+              </Button>
+              <Button variant="ghost" size="sm" onPress={f.clearPhoto}>
+                <Button.Label>Remove photo</Button.Label>
+              </Button>
+            </View>
+          </View>
+        ) : (
+          <Pressable
+            onPress={f.pickPhoto}
+            accessibilityRole="button"
+            accessibilityLabel="Upload photo"
+            className="aspect-video w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border"
+          >
+            <Icon sf="photo.badge.plus" ion="image-outline" size={32} color={muted} />
+            <Text className="text-base font-medium text-foreground">Upload photo</Text>
+            <Text className="text-sm text-muted">Optional · from your photo library</Text>
+          </Pressable>
+        )}
       </View>
 
-      <FormField label="What is it?" value={f.title} onChangeText={f.setTitle} placeholder="Glue sticks, large" />
+      <SelectField
+        label="School"
+        placeholder="Choose a school"
+        options={f.schools.map((s) => ({ value: s.school_id, label: s.name }))}
+        value={f.schoolID}
+        onChange={f.setSchoolID}
+      />
+
+      <SelectField
+        label="Category"
+        placeholder="Choose a category"
+        options={CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
+        value={f.category}
+        onChange={(v) => f.setCategory(v as Category)}
+      />
+
+      <FormField label="Title" value={f.title} onChangeText={f.setTitle} placeholder="Glue sticks, large" />
       <FormField
-        label="Details"
+        label="Description"
         value={f.description}
         onChangeText={f.setDescription}
         placeholder="Brand, size, anything another school should know"
@@ -47,13 +90,13 @@ export default function NewItemScreen() {
       <FormField label="Quantity" value={f.quantity} onChangeText={f.setQuantity} placeholder="12" keyboardType="number-pad" />
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-foreground">Counted in</Text>
+        <Label>Unit</Label>
         <Segmented values={UNITS} value={f.unit} onChange={f.setUnit} />
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-foreground">Condition</Text>
-        <Segmented values={CONDITIONS} value={f.condition} onChange={f.setCondition} labels={CONDITIONS.map(conditionLabel)} />
+        <Label>Condition</Label>
+        <Segmented values={FORM_CONDITIONS} value={f.condition} onChange={f.setCondition} labels={FORM_CONDITIONS.map(conditionLabel)} />
       </View>
 
       {f.error ? <Text className="text-sm text-danger">{f.error}</Text> : null}
@@ -65,7 +108,7 @@ export default function NewItemScreen() {
           f.save();
         }}
       >
-        <Button.Label>List item</Button.Label>
+        <Button.Label>Submit item</Button.Label>
       </Button>
     </KeyboardAwareScrollView>
   );

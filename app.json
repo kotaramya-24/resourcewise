@@ -43,6 +43,14 @@
       "expo-secure-store",
       "expo-font",
       "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ResourceWise uses your photos so you can add a picture of the supplies you're listing.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "expo-status-bar",
       "expo-web-browser"
     ],
