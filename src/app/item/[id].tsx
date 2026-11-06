@@ -64,7 +64,11 @@ export default function ItemScreen() {
         <Card>
           <View className="gap-3">
             <Text className="text-base font-semibold text-foreground">This is your school&apos;s listing</Text>
-            <Text className="text-sm text-muted">Other schools can claim it. Approve their requests on My school.</Text>
+            <Text className="text-sm text-muted">
+              {item.status === 'submitted'
+                ? 'Other schools can claim it once it is confirmed below.'
+                : 'Other schools can claim it. Approve their requests on My school.'}
+            </Text>
             <Button variant="danger-soft" onPress={s.remove}>
               <Button.Label>Remove listing</Button.Label>
             </Button>
