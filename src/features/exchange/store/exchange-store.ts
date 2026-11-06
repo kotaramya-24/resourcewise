@@ -155,7 +155,16 @@ export const useExchangeStore = create<ExchangeState>()(
     }),
     {
       name: 'resourcewise-exchange',
-      version: 1,
+      // v2 reloads the attached seed data unchanged, discarding earlier test claims.
+      version: 2,
+      migrate: () => ({
+        schools: SEED_SCHOOLS,
+        items: SEED_ITEMS,
+        needs: SEED_NEEDS,
+        claims: [],
+        activeSchoolID: 'S01',
+        filters: EMPTY_FILTERS,
+      }),
       storage: createJSONStorage(() => zustandStorage),
     },
   ),

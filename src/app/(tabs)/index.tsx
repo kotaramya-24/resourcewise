@@ -5,6 +5,7 @@ import { FlatList, ScrollView, Text, View } from 'react-native';
 import { Pressable } from '@/components/pressable';
 import { FilterPill } from '@/features/exchange/components/filter-pill';
 import { ItemRow } from '@/features/exchange/components/item-row';
+import { TableCounts } from '@/features/exchange/components/table-counts';
 import { useSuppliesScreen } from '@/features/exchange/hooks/use-supplies-screen';
 import { shortSchoolName } from '@/features/exchange/utils/labels';
 
@@ -32,6 +33,7 @@ export default function SuppliesScreen() {
               </Text>
             </Pressable>
           </View>
+          <TableCounts counts={s.tableCounts} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
             <FilterPill label={s.labels.school} active={s.active.school} onPress={() => s.openFilter('school')} />
             <FilterPill label={s.labels.category} active={s.active.category} onPress={() => s.openFilter('category')} />

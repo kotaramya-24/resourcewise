@@ -6,6 +6,7 @@ import { categoryLabel, conditionLabel, shortSchoolName } from '@/features/excha
 export function useSuppliesScreen() {
   const items = useExchangeStore((s) => s.items);
   const schools = useExchangeStore((s) => s.schools);
+  const needs = useExchangeStore((s) => s.needs);
   const filters = useExchangeStore((s) => s.filters);
   const activeSchoolID = useExchangeStore((s) => s.activeSchoolID);
   const clearFilters = useExchangeStore((s) => s.clearFilters);
@@ -26,6 +27,11 @@ export function useSuppliesScreen() {
     router.push({ pathname: '/filter', params: { kind } });
 
   return {
+    tableCounts: [
+      { label: 'Schools', value: schools.length },
+      { label: 'Items', value: items.length },
+      { label: 'Needs', value: needs.length },
+    ],
     visible,
     totalUnits,
     anyFilter,
