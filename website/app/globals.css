@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Chalkboard: the app icon's green, chalk white, pencil yellow, eraser pink */
+    --background: 153 62% 14%;
+    --foreground: 60 25% 94%;
+    --card: 153 55% 18%;
+    --card-foreground: 60 25% 94%;
+    --primary: 46 96% 54%;
+    --primary-foreground: 153 62% 10%;
+    --secondary: 153 45% 22%;
+    --secondary-foreground: 60 25% 94%;
+    --muted: 153 40% 20%;
+    --muted-foreground: 100 12% 74%;
+    --accent: 345 88% 70%;
+    --accent-foreground: 153 62% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 100 18% 32%;
+    --input: 100 18% 32%;
+    --ring: 46 96% 54%;
+    --radius: 0.5rem;
+    --brand: 153;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  html {
+    /* Smooth scroll for in-page anchor nav. */
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "ss01" 1, "cv11" 1, "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Tighten display headings -- single rule the agent doesn't have to
+     remember. Pairs with the display font shipped via lib/fonts.ts. */
+  h1, h2, h3 {
+    letter-spacing: -0.025em;
+  }
+}
+
+@layer utilities {
+  /* Subtle dotted background -- works on any --background. Agent uses
+     <div className="bg-dots ..."> on hero sections. */
+  .bg-dots {
+    background-image: radial-gradient(hsl(var(--foreground) / 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  /* Soft squared grid for tech/SaaS aesthetics. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--foreground) / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  /* Aurora wash -- two soft brand-tinted blobs, ideal for hero behind type.
+     Use with `relative isolate overflow-hidden` and place type at z-10. */
+  .bg-aurora {
+    background:
+      radial-gradient(60% 50% at 20% 0%, hsl(var(--brand) 90% 70% / 0.35) 0%, transparent 60%),
+      radial-gradient(50% 40% at 80% 30%, hsl(calc(var(--brand) + 40) 90% 75% / 0.28) 0%, transparent 60%),
+      radial-gradient(60% 50% at 50% 100%, hsl(calc(var(--brand) - 30) 90% 70% / 0.22) 0%, transparent 60%);
+  }
+  /* Bigger, more dramatic gradient mesh for landing heroes. */
+  .bg-mesh {
+    background:
+      radial-gradient(at 27% 37%, hsl(var(--brand) 89% 75%) 0px, transparent 50%),
+      radial-gradient(at 97% 21%, hsl(calc(var(--brand) + 60) 80% 70%) 0px, transparent 50%),
+      radial-gradient(at 52% 99%, hsl(calc(var(--brand) - 40) 80% 70%) 0px, transparent 50%),
+      radial-gradient(at 10% 29%, hsl(calc(var(--brand) + 90) 70% 75%) 0px, transparent 50%),
+      radial-gradient(at 97% 96%, hsl(calc(var(--brand) - 60) 90% 75%) 0px, transparent 50%);
+  }
+  /* Soft glow halo. Wrap a hero element: <div className="glow"><h1>...</h1></div> */
+  .glow {
+    position: relative;
+  }
+  .glow::before {
+    content: "";
+    position: absolute;
+    inset: -10%;
+    background: radial-gradient(closest-side, hsl(var(--brand) 90% 70% / 0.35), transparent);
+    filter: blur(40px);
+    z-index: -1;
+  }
+  /* Conic accent ring for icons / badges. */
+  .ring-conic {
+    background: conic-gradient(
+      from 180deg at 50% 50%,
+      hsl(var(--brand) 90% 70%) 0deg,
+      hsl(calc(var(--brand) + 60) 80% 75%) 120deg,
+      hsl(calc(var(--brand) - 40) 80% 70%) 240deg,
+      hsl(var(--brand) 90% 70%) 360deg
+    );
+  }
+  /* Gradient text helper. */
+  .text-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand) 90% 30%),
+      hsl(calc(var(--brand) + 40) 90% 55%)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Slow drifting blob -- pure CSS animation for hero atmosphere. */
+  .animate-drift {
+    animation: drift 18s ease-in-out infinite;
+  }
+  @keyframes drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(8%, -6%, 0) scale(1.08); }
+  }
+  /* Subtle reveal for hero copy. Use on h1/p with `style={{animationDelay:'0.1s'}}`. */
+  .animate-rise {
+    animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translate3d(0, 12px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  /* Hairline separator that fades at both ends. */
+  .hr-fade {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--foreground) / 0.18),
+      transparent
+    );
+  }
+  /* Type pairing helpers wired up to lib/fonts.ts variables. */
+  .font-display { font-family: var(--font-display, ui-serif, Georgia, serif); }
+  .font-body    { font-family: var(--font-body, ui-sans-serif, system-ui, sans-serif); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift,
+  .animate-rise {
+    animation: none;
+  }
+}
+
+@layer components {
+  /* Chalk dust: a faint grain over the board */
+  .chalkboard {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse at 20% 0%, hsl(153 50% 22% / 0.9), transparent 60%),
+      radial-gradient(ellipse at 90% 100%, hsl(153 60% 9% / 0.9), transparent 55%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .chalk-underline {
+    background-image: linear-gradient(transparent 62%, hsl(46 96% 54% / 0.45) 62%, hsl(46 96% 54% / 0.45) 88%, transparent 88%);
+  }
+  .ruled {
+    background-image: repeating-linear-gradient(transparent 0 31px, hsl(60 25% 94% / 0.08) 31px 32px);
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  .rise { animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation: none; }
+  }
+}
