@@ -14,9 +14,10 @@ import { conditionLabel, formatDate, pluralUnit, shortSchoolName } from '@/featu
 import { fadeIn } from '@/lib/motion';
 
 const KIND_TEXT = {
-  exact: 'Covers it',
-  partial_quantity: 'Covers part',
-  partial_condition: 'Below your condition',
+  exact: 'Fits',
+  partial_quantity: 'Not enough',
+  partial_condition: 'Condition too low',
+  awaiting_confirmation: 'Waiting for confirmation',
   none: '',
 } as const;
 
@@ -88,27 +89,46 @@ export default function NeedScreen() {
         </Section>
       ) : null}
 
-      {!fulfilled ? (
-        <Section title={s.isMine ? 'Supplies that could fill it' : 'Supplies other schools offer'}>
-          {s.candidates.length === 0 ? (
-            <Text className="text-sm text-muted">
-              No school has listed this yet. It stays open, and any new matching listing shows up here.
-            </Text>
-          ) : (
+      {!fulfilled && s.match ? (
+        <Section title="Best match">
+          {s.match.kind === 'exact' && s.match.item ? (
             <Card list>
-              {s.candidates.map(({ kind, item }) =>
-                item ? (
-                  <ListRow
-                    key={item.item_id}
-                    title={item.title}
-                    subtitle={`${shortSchoolName(s.schoolName(item.school_id))} · ${item.quantity} ${pluralUnit(item.unit, item.quantity)} · ${conditionLabel(item.condition)} · ${KIND_TEXT[kind]}`}
-                    left={<ItemPhoto item={item} className="size-12 rounded-lg" iconSize={18} />}
-                    onPress={() => s.openItem(item.item_id)}
-                  />
-                ) : null,
-              )}
+              <ListRow
+                title={s.match.item.title}
+                subtitle={`${shortSchoolName(s.schoolName(s.match.item.school_id))} · ${s.match.item.quantity} ${pluralUnit(s.match.item.unit, s.match.item.quantity)} · ${conditionLabel(s.match.item.condition)}`}
+                left={<ItemPhoto item={s.match.item} className="size-12 rounded-lg" iconSize={18} />}
+                onPress={() => (s.match?.item ? s.openItem(s.match.item.item_id) : undefined)}
+              />
+            </Card>
+          ) : (
+            <Card>
+              <View className="gap-1">
+                <Text className="text-lg font-bold text-foreground">No match</Text>
+                <Text className="text-sm text-muted">{s.match.reason}</Text>
+                <Text className="text-sm text-muted">
+                  The need stays open. A confirmed listing from another school that fits will show here.
+                </Text>
+              </View>
             </Card>
           )}
+        </Section>
+      ) : null}
+
+      {!fulfilled && s.others.length > 0 ? (
+        <Section title="Other listings checked">
+          <Card list>
+            {s.others.map(({ kind, item }) =>
+              item ? (
+                <ListRow
+                  key={item.item_id}
+                  title={item.title}
+                  subtitle={`${KIND_TEXT[kind]} · ${shortSchoolName(s.schoolName(item.school_id))} · ${item.quantity} ${pluralUnit(item.unit, item.quantity)} · ${conditionLabel(item.condition)}`}
+                  left={<ItemPhoto item={item} className="size-12 rounded-lg" iconSize={18} />}
+                  onPress={() => s.openItem(item.item_id)}
+                />
+              ) : null,
+            )}
+          </Card>
         </Section>
       ) : null}
 

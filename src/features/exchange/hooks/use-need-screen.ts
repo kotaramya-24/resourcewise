@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 
 import { useExchangeStore } from '@/features/exchange/store/exchange-store';
-import { candidatesFor, coveredQuantity, remainingQuantity } from '@/features/exchange/utils/match';
+import { bestMatch, candidatesFor, coveredQuantity, remainingQuantity } from '@/features/exchange/utils/match';
 import { confirmDelete } from '@/lib/confirm';
 
 export function useNeedScreen(needID: string) {
@@ -14,6 +14,8 @@ export function useNeedScreen(needID: string) {
 
   const schoolName = (id: string) => schools.find((x) => x.school_id === id)?.name ?? id;
   const candidates = need ? candidatesFor(need, items, claims) : [];
+  const match = need ? bestMatch(need, items, claims, schoolName) : null;
+  const others = candidates.filter((c) => c.item?.item_id !== match?.item?.item_id);
   const covered = need ? coveredQuantity(need, claims) : 0;
   const remaining = need ? remainingQuantity(need, claims) : 0;
   const isMine = need?.school_id === activeSchoolID;
@@ -33,5 +35,5 @@ export function useNeedScreen(needID: string) {
       },
     });
 
-  return { need, candidates, covered, remaining, isMine, pledges, schoolName, openItem, remove, items };
+  return { need, match, others, candidates, covered, remaining, isMine, pledges, schoolName, openItem, remove, items };
 }

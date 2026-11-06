@@ -21,10 +21,10 @@ export function useNeedsScreen() {
       if (view === 'covered') return n.status === 'fulfilled';
       return n.status === 'open';
     })
-    .map((need) => ({ need, match: bestMatch(need, items, claims), remaining: remainingQuantity(need, claims) }))
+    .map((need) => ({ need, match: bestMatch(need, items, claims, schoolName), remaining: remainingQuantity(need, claims) }))
     .sort((a, b) => a.need.needed_by.localeCompare(b.need.needed_by));
 
-  const matchedCount = rows.filter((r) => r.match.kind !== 'none').length;
+  const matchedCount = rows.filter((r) => r.match.kind === 'exact').length;
 
   return { rows, view, setView, schoolName, matchedCount };
 }

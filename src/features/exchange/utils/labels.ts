@@ -70,7 +70,8 @@ export function formatDate(iso: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function pluralUnit(unit: string, quantity: number): string {
+export function pluralUnit(unit: string | undefined, quantity: number): string {
+  if (!unit) return quantity === 1 ? 'unit' : 'units';
   if (quantity === 1) return unit;
   if (unit === 'each' || unit.endsWith('s')) return unit;
   if (unit === 'box') return 'boxes';

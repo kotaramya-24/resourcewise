@@ -1,1 +1,2 @@
 - [Seed data source](seed-data-source.md): tables loaded verbatim from workbook -1; 10/60/50
+- [Need matching rules](need-matching-rules.md): strict match only; seed available counts as confirmed; expect 18 matches

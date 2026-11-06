@@ -62,9 +62,11 @@ export type ConfirmResult = { ok: true } | { ok: false; errors: string[] };
 
 export type ClaimResult = { ok: true; claim: Claim } | { ok: false; error: string };
 
-export type MatchKind = 'exact' | 'partial_quantity' | 'partial_condition' | 'none';
+export type MatchKind = 'exact' | 'partial_quantity' | 'partial_condition' | 'awaiting_confirmation' | 'none';
 
 export interface NeedMatch {
   kind: MatchKind;
   item: Item | null;
+  /** Why nothing fits. Set only when kind is 'none'. */
+  reason?: string;
 }

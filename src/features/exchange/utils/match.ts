@@ -1,5 +1,12 @@
 import type { Claim, Item, Need, NeedMatch } from '@/features/exchange/types/exchange';
-import { meetsCondition } from '@/features/exchange/utils/labels';
+import {
+  categoryLabel,
+  conditionLabel,
+  conditionRank,
+  meetsCondition,
+  pluralUnit,
+  shortSchoolName,
+} from '@/features/exchange/utils/labels';
 import { isClaimable } from '@/features/exchange/utils/review';
 
 const LEAD_INS = [
@@ -37,9 +44,21 @@ export function remainingQuantity(need: Need, claims: Claim[]): number {
   return Math.max(0, need.quantity - coveredQuantity(need, claims));
 }
 
-const KIND_ORDER = { exact: 0, partial_quantity: 1, partial_condition: 2, none: 3 } as const;
+const KIND_ORDER = { exact: 0, partial_quantity: 1, partial_condition: 2, awaiting_confirmation: 3, none: 4 } as const;
 
-/** Candidate items for a need, best first: other schools' available stock of the same thing. */
+/** Seed listings never went through review, so they count as confirmed. New items must be confirmed first. */
+function isConfirmed(item: Item): boolean {
+  return isClaimable(item);
+}
+
+function kindFor(need: Need, item: Item, remaining: number): NeedMatch['kind'] {
+  if (item.status === 'submitted') return 'awaiting_confirmation';
+  if (!meetsCondition(item.condition, need.min_condition)) return 'partial_condition';
+  if (item.quantity < remaining) return 'partial_quantity';
+  return 'exact';
+}
+
+/** Other schools' listings of the same thing, best first. Only 'exact' ones are real matches. */
 export function candidatesFor(need: Need, items: Item[], claims: Claim[]): NeedMatch[] {
   const remaining = remainingQuantity(need, claims);
   return items
@@ -47,19 +66,64 @@ export function candidatesFor(need: Need, items: Item[], claims: Claim[]): NeedM
       (it) =>
         it.category === need.category &&
         it.school_id !== need.school_id &&
-        isClaimable(it) &&
+        it.quantity > 0 &&
+        (it.status === 'submitted' || isConfirmed(it)) &&
         describesSameThing(need, it),
     )
-    .map((it): NeedMatch => {
-      if (!meetsCondition(it.condition, need.min_condition)) return { kind: 'partial_condition', item: it };
-      if (it.quantity < remaining) return { kind: 'partial_quantity', item: it };
-      return { kind: 'exact', item: it };
-    })
-    .sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || (b.item?.quantity ?? 0) - (a.item?.quantity ?? 0));
+    .map((it): NeedMatch => ({ kind: kindFor(need, it, remaining), item: it }))
+    .sort(
+      (a, b) =>
+        KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
+        // Among real matches, take the smallest stock that still covers it, then the better condition.
+        (a.kind === 'exact' ? (a.item?.quantity ?? 0) - (b.item?.quantity ?? 0) : (b.item?.quantity ?? 0) - (a.item?.quantity ?? 0)) ||
+        conditionRank(b.item?.condition ?? '') - conditionRank(a.item?.condition ?? ''),
+    );
 }
 
-export function bestMatch(need: Need, items: Item[], claims: Claim[]): NeedMatch {
-  return candidatesFor(need, items, claims)[0] ?? { kind: 'none', item: null };
+function noMatchReason(
+  need: Need,
+  items: Item[],
+  candidates: NeedMatch[],
+  remaining: number,
+  schoolName: (id: string) => string,
+): string {
+  const at = (item: Item) => shortSchoolName(schoolName(item.school_id));
+  const wanted = `${conditionLabel(need.min_condition)} or better`;
+
+  if (candidates.length === 0) {
+    const ownOnly = items.some(
+      (it) => it.school_id === need.school_id && it.category === need.category && it.quantity > 0 && describesSameThing(need, it),
+    );
+    if (ownOnly) return 'Only your own school lists this. A match has to come from a different school.';
+    return `No other school lists this in ${categoryLabel(need.category)}.`;
+  }
+
+  const confirmed = candidates.filter((c) => c.kind !== 'awaiting_confirmation');
+  if (confirmed.length === 0) {
+    const first = candidates[0]?.item;
+    return first
+      ? `${at(first)} listed it, but it is still waiting for confirmation.`
+      : 'A listing is still waiting for confirmation.';
+  }
+
+  const goodEnough = confirmed.filter((c) => c.kind === 'partial_quantity');
+  const biggest = goodEnough[0]?.item;
+  if (biggest) {
+    return `Not enough: ${at(biggest)} has only ${biggest.quantity} ${pluralUnit(biggest.unit, biggest.quantity)} in the right condition, and you need ${remaining}.`;
+  }
+
+  const below = confirmed[0]?.item;
+  if (!below) return 'Nothing fits yet.';
+  return `Condition too low: ${at(below)} has it as ${conditionLabel(below.condition)}, and you need ${wanted}.`;
+}
+
+/** The single best match, or 'none' with the reason. Never returns a listing that falls short. */
+export function bestMatch(need: Need, items: Item[], claims: Claim[], schoolName: (id: string) => string): NeedMatch {
+  const remaining = remainingQuantity(need, claims);
+  const candidates = candidatesFor(need, items, claims);
+  const best = candidates[0];
+  if (best?.kind === 'exact') return best;
+  return { kind: 'none', item: null, reason: noMatchReason(need, items, candidates, remaining, schoolName) };
 }
 
 /** Open needs of `schoolID` that this item could fill. */

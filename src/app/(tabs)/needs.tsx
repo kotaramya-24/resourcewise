@@ -39,7 +39,7 @@ export default function NeedsScreen() {
             labels={['Open', 'My school', 'Covered']}
           />
           <Text className="text-sm text-muted">
-            {s.rows.length} {s.rows.length === 1 ? 'need' : 'needs'} · {s.matchedCount} with supplies on offer
+            {s.rows.length} {s.rows.length === 1 ? 'need' : 'needs'} · {s.matchedCount} with a match
           </Text>
         </View>
       }
